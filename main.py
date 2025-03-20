@@ -7,7 +7,7 @@ import uvicorn
 
 app = FastAPI()
 
-# ✅ Try loading the model
+# ✅ Load the trained ML model
 try:
     model = joblib.load("gold_price_model.joblib")
 except Exception as e:
@@ -18,7 +18,7 @@ class InputData(BaseModel):
     SPX: float
     USO: float
     SLV: float
-    EUR_USD: float
+    EUR_USD: float  # ✅ Fix: Keep API name consistent
 
 @app.get("/")
 def home():
@@ -27,16 +27,20 @@ def home():
 @app.post("/predict/")
 async def predict(data: InputData):
     try:
-        # ✅ Fix Pydantic V2 issue: Use .model_dump() instead of .dict()
+        # ✅ Convert API input to DataFrame
         input_df = pd.DataFrame([data.model_dump()])
-        
+
+        # ✅ Fix: Rename column to match trained model
+        input_df.rename(columns={"EUR_USD": "EUR/USD"}, inplace=True)
+
+        # ✅ Make prediction
         prediction = model.predict(input_df)
         return {"predicted_price": float(prediction[0])}
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
 
-# ✅ Run FastAPI with correct port
+# ✅ Run FastAPI with correct Railway port
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run(app, host="0.0.0.0", port=port)
