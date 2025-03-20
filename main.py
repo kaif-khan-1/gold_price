@@ -1,23 +1,4 @@
-from fastapi import FastAPI
-import joblib
-import pandas as pd
-from pydantic import BaseModel
-
-app = FastAPI()
-
-# Load trained model using Joblib
-model = joblib.load("gold_price_model.joblib")
-
-# Define input format
-class InputData(BaseModel):
-    SPX: float
-    USO: float
-    SLV: float
-    EUR_USD: float
-
-@app.get("/")
-def home():
-    return {"message":import os
+import os
 from fastapi import FastAPI
 import joblib
 import pandas as pd
@@ -50,14 +31,3 @@ if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))  # Default to 8000
     uvicorn.run(app, host="0.0.0.0", port=port)
- "Gold Price Prediction API is running!"}
-
-@app.post("/predict/")
-def predict(data: InputData):
-    # Convert input data to DataFrame
-    input_df = pd.DataFrame([data.dict()])
-
-    # Make prediction
-    prediction = model.predict(input_df)
-
-    return {"predicted_price": prediction[0]}
