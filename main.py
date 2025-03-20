@@ -1,11 +1,21 @@
 import os
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import joblib
 import pandas as pd
 import uvicorn
 
 app = FastAPI()
+
+# ✅ Enable CORS for all origins (Allow frontend access)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # ✅ Change this to your React domain for security
+    allow_credentials=True,
+    allow_methods=["*"],  # ✅ Allow all HTTP methods
+    allow_headers=["*"],  # ✅ Allow all headers
+)
 
 # ✅ Load the trained ML model
 try:
@@ -18,7 +28,7 @@ class InputData(BaseModel):
     SPX: float
     USO: float
     SLV: float
-    EUR_USD: float  # ✅ Fix: Keep API name consistent
+    EUR_USD: float
 
 @app.get("/")
 def home():
@@ -27,13 +37,9 @@ def home():
 @app.post("/predict/")
 async def predict(data: InputData):
     try:
-        # ✅ Convert API input to DataFrame
         input_df = pd.DataFrame([data.model_dump()])
-
-        # ✅ Fix: Rename column to match trained model
         input_df.rename(columns={"EUR_USD": "EUR/USD"}, inplace=True)
 
-        # ✅ Make prediction
         prediction = model.predict(input_df)
         return {"predicted_price": float(prediction[0])}
     
